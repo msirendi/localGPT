@@ -1,0 +1,38 @@
+"use client";
+import React from "react";
+import FileSearchSetup from "./file-search-setup";
+import WebSearchConfig from "./websearch-config";
+import PanelConfig from "./panel-config";
+import useToolsStore from "@/stores/useToolsStore";
+
+export default function ContextPanel() {
+  const {
+    fileSearchEnabled,
+    setFileSearchEnabled,
+    webSearchEnabled,
+    setWebSearchEnabled,
+  } = useToolsStore();
+
+  return (
+    <div className="h-full p-8 w-full bg-[#f9f9f9] rounded-t-xl md:rounded-none border-l-1 border-stone-100">
+      <div className="flex flex-col overflow-y-scroll h-full">
+        <PanelConfig
+          title="File Search"
+          tooltip="Allows to search a knowledge base (vector store)"
+          enabled={fileSearchEnabled}
+          setEnabled={setFileSearchEnabled}
+        >
+          <FileSearchSetup />
+        </PanelConfig>
+        <PanelConfig
+          title="Web Search"
+          tooltip="Allows to search the web"
+          enabled={webSearchEnabled}
+          setEnabled={setWebSearchEnabled}
+        >
+          <WebSearchConfig />
+        </PanelConfig>
+      </div>
+    </div>
+  );
+}

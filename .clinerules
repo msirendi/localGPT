@@ -1,0 +1,93 @@
+# localGPT - Project Intelligence
+
+## Critical Implementation Paths
+
+### Core Development Flow
+1. **API Integration**: All OpenAI interactions go through `/app/api/turn_response/route.ts`
+2. **State Management**: Use Zustand stores (`stores/`) for client state - avoid prop drilling
+3. **Tool System**: Only built-in OpenAI tools supported (web_search_preview, file_search)
+4. **Component Pattern**: Compose Radix UI primitives, avoid custom implementations
+5. **Conversation Management**: Full CRUD operations via `/app/api/conversations/` routes with shared storage
+
+### Key Dependencies
+- **OpenAI Responses API**: Not Chat Completions - uses streaming + tool calling patterns
+- **Server-Sent Events**: Critical for real-time streaming - handle connection management carefully
+- **Zustand**: Lightweight state - prefer over Context API or Redux
+- **Radix UI + Tailwind**: UI foundation - stick to established patterns
+
+## Project-Specific Conventions
+
+### File Organization
+- `app/api/` - All backend functionality (Next.js App Router)
+- `components/` - React components (prefer composition)
+- `lib/` - Utilities and integrations
+- `config/` - App configuration and constants
+- `stores/` - State management
+
+### Code Patterns
+- **Error Handling**: Try-catch in API routes, graceful fallbacks in components  
+- **TypeScript**: Strict mode enabled - use proper typing
+- **Streaming**: Always handle SSE connection states and cleanup
+- **Environment**: Server-side API keys only, validate runtime configuration
+
+### Available Tools
+- **Web Search**: Uses `web_search_preview` type with optional user location
+- **File Search**: Vector store-based knowledge base search
+
+## Critical Development Notes
+
+### OpenAI Responses API Specifics
+- Uses `gpt-4.1` model specifically
+- Streaming responses require proper SSE handling
+- Tool configuration passed dynamically per request
+- Only supports web_search_preview and file_search tools
+
+### UI/UX Patterns
+- Mobile-first responsive design
+- Tools panel collapses on small screens - only shows Web Search and File Search
+- Real-time streaming feedback essential
+- Loading states for all async operations
+
+### Security Considerations
+- API keys server-side only (never client)
+- File upload validation required for vector stores
+- No OAuth integrations - simplified authentication model
+
+## Extension Guidelines
+
+### Adding New Built-in Tools
+1. Update `lib/tools/tools.ts` to include new OpenAI tool types
+2. Add UI components in tools panel if configuration needed
+3. Update tool call handling in `components/tool-call.tsx`
+4. Test with streaming responses
+
+### Adding New Components
+- Use Radix UI primitives as foundation
+- Follow existing prop interface patterns
+- Handle loading/error states consistently
+- Maintain responsive design principles
+
+## Performance Notes
+- Smaller bundle size after removing unused features
+- Stream management critical for long conversations
+- File processing should be client-validated before upload
+- Mobile optimization required for touch interfaces
+
+## Quality Gates
+- **TypeScript**: Must compile without errors (`npx tsc --noEmit`)
+- **Linting**: ESLint must pass (`npm run lint`)
+- **Build**: Production build must succeed (`npm run build`)
+- **Streaming**: Test SSE connections don't leak or hang
+
+## Removed Features
+- **Code Interpreter**: Removed completely including UI and API routes
+- **Functions**: Removed custom function calling system
+- **MCP Integration**: Removed Model Context Protocol support
+- **Google Integration**: Removed OAuth and Google services integration
+- All related components, API routes, and configuration files have been cleaned up
+
+## Common Pitfalls
+- Don't expose API keys to client-side code
+- Handle SSE connection cleanup properly
+- Validate environment variables at startup
+- Test mobile responsiveness for all new UI
