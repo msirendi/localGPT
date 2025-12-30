@@ -11,7 +11,14 @@ export default function ContextPanel() {
     setFileSearchEnabled,
     webSearchEnabled,
     setWebSearchEnabled,
+    taskPlannerEnabled,
+    setTaskPlannerEnabled,
   } = useToolsStore();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="h-full p-8 w-full bg-[#f9f9f9] rounded-t-xl md:rounded-none border-l-1 border-stone-100">
@@ -19,7 +26,7 @@ export default function ContextPanel() {
         <PanelConfig
           title="File Search"
           tooltip="Allows to search a knowledge base (vector store)"
-          enabled={fileSearchEnabled}
+          enabled={mounted && fileSearchEnabled}
           setEnabled={setFileSearchEnabled}
         >
           <FileSearchSetup />
@@ -27,10 +34,20 @@ export default function ContextPanel() {
         <PanelConfig
           title="Web Search"
           tooltip="Allows to search the web"
-          enabled={webSearchEnabled}
+          enabled={mounted && webSearchEnabled}
           setEnabled={setWebSearchEnabled}
         >
           <WebSearchConfig />
+        </PanelConfig>
+        <PanelConfig
+          title="Task Planner"
+          tooltip="Plans out complex long running tasks"
+          enabled={mounted && taskPlannerEnabled}
+          setEnabled={setTaskPlannerEnabled}
+        >
+          <div className="text-sm text-stone-500 p-4">
+            Generates and documents individual associated steps for complex tasks.
+          </div>
         </PanelConfig>
       </div>
     </div>

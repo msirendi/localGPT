@@ -366,6 +366,7 @@ export const processMessages = async () => {
           }
           break;
         }
+
         // Streaming MCP tool call arguments
         case "response.mcp_call_arguments.delta": {
           // Append delta to MCP arguments
@@ -388,6 +389,7 @@ export const processMessages = async () => {
           }
           break;
         }
+
         case "response.mcp_call_arguments.done": {
           // Final MCP arguments string received
           const { item_id, arguments: finalArgs } = data;
@@ -480,8 +482,75 @@ export const processMessages = async () => {
           console.log("response completed", data);
           const { response } = data;
 
+          // Check if there's a task_planner function call that needs execution
+          const taskPlannerCall = response.output?.find(
+            (item: any) =>
+              item.type === "function_call" && item.name === "task_planner"
+          );
+
+          if (taskPlannerCall) {
+            // Execute the task planner
+            const parsedArgs = JSON.parse(taskPlannerCall.arguments || "{}");
+            const task = parsedArgs.task;
+
+            if (task) {
+              try {
+                // Update status to show we're executing
+                const toolCallMsg = chatMessages.find(
+                  (m) => m.type === "tool_call" && m.id === taskPlannerCall.id
+                ) as ToolCallItem | undefined;
+                if (toolCallMsg) {
+                  toolCallMsg.status = "in_progress";
+                  setChatMessages([...chatMessages]);
+                }
+
+                // Call our task planner API
+                const planResponse = await fetch("/api/task_planner", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ task }),
+                });
+
+                const planResult = await planResponse.json();
+
+                // Update the tool call with the result
+                if (toolCallMsg) {
+                  toolCallMsg.output = JSON.stringify(planResult);
+                  toolCallMsg.status = "completed";
+                  setChatMessages([...chatMessages]);
+                }
+
+                // Add the function call output to conversation items for continuation
+                conversationItems.push({
+                  type: "function_call_output",
+                  call_id: taskPlannerCall.call_id,
+                  output: JSON.stringify(planResult),
+                });
+                setConversationItems([...conversationItems]);
+
+                // Continue the conversation with the tool result
+                // The model will process the task planner output and respond
+                await processMessages();
+                return; // Exit this handler since we're continuing the conversation
+              } catch (error) {
+                console.error("Error executing task planner:", error);
+                const toolCallMsg = chatMessages.find(
+                  (m) => m.type === "tool_call" && m.id === taskPlannerCall.id
+                ) as ToolCallItem | undefined;
+                if (toolCallMsg) {
+                  toolCallMsg.status = "failed";
+                  toolCallMsg.output = JSON.stringify({
+                    error:
+                      error instanceof Error ? error.message : "Unknown error",
+                  });
+                  setChatMessages([...chatMessages]);
+                }
+              }
+            }
+          }
+
           // Handle MCP tools list (append all lists, not just the first)
-          const mcpListToolsMessages = response.output.filter(
+          const mcpListToolsMessages = response.output?.filter(
             (m: Item) => m.type === "mcp_list_tools"
           ) as McpListToolsItem[];
 
@@ -498,7 +567,7 @@ export const processMessages = async () => {
           }
 
           // Handle MCP approval request
-          const mcpApprovalRequestMessage = response.output.find(
+          const mcpApprovalRequestMessage = response.output?.find(
             (m: Item) => m.type === "mcp_approval_request"
           );
 

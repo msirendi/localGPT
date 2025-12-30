@@ -26,6 +26,7 @@ export type WebSearchConfig = {
 export interface ToolsState {
   webSearchEnabled: boolean;
   fileSearchEnabled: boolean;
+  taskPlannerEnabled: boolean;
   vectorStore: VectorStore;
   webSearchConfig: WebSearchConfig;
 }
@@ -35,6 +36,8 @@ interface StoreState {
   setFileSearchEnabled: (enabled: boolean) => void;
   webSearchEnabled: boolean;
   setWebSearchEnabled: (enabled: boolean) => void;
+  taskPlannerEnabled: boolean;
+  setTaskPlannerEnabled: (enabled: boolean) => void;
   vectorStore: VectorStore | null;
   setVectorStore: (store: VectorStore) => void;
   webSearchConfig: WebSearchConfig;
@@ -63,6 +66,10 @@ const useToolsStore = create<StoreState>()(
       },
       setVectorStore: (store) => set({ vectorStore: store }),
       setWebSearchConfig: (config) => set({ webSearchConfig: config }),
+      taskPlannerEnabled: false,
+      setTaskPlannerEnabled: (enabled: boolean) => {
+        set({ taskPlannerEnabled: enabled });
+      },
     }),
     {
       name: "tools-store",
